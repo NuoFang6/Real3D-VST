@@ -161,9 +161,12 @@ void Real3DVSTAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     fifoReadIdx = 0;
     fifoWriteIdx = 0;
     outFifoReadIdx = 0;
-    outFifoWriteIdx = 0;
+    outFifoWriteIdx = fftSize; // Pre-fill with one block of silence for FIFO buffering
 
     processInputBuffer.assign (fftSize * 2, 0.0f);
+
+    // Report total latency to host: FIFO buffering latency (fftSize) + freesurround_decoder algorithmic latency (fftSize / 2)
+    setLatencySamples (fftSize + (fftSize / 2));
 }
 
 void Real3DVSTAudioProcessor::releaseResources()
