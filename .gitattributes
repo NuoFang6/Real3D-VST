@@ -1,0 +1,26 @@
+# Treat as textual with UTF-8 encoding
+* text=auto eol=lf
+*.cpp text eol=lf
+*.h text eol=lf
+*.c text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+*.cmake text eol=lf
+CMakeLists.txt text eol=lf
+
+# Windows specific
+*.vcxproj text eol=crlf
+*.sln text eol=crlf
+*.rc text eol=crlf
+
+# Binary types
+*.dll binary
+*.obj binary
+*.exe binary
+*.vst3 binary
+*.pdb binary
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary

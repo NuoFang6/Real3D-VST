@@ -1,0 +1,29 @@
+# Build artifacts
+build/
+bin/
+obj/
+x64/
+Release/
+Debug/
+
+# JUCE Generated
+JuceLibraryCode/
+juce_build/
+Real3D-VST_artefacts/
+
+# IDE / System
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# CMake generated
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+install_manifest.txt
+compile_commands.json
+
+# Local env
+.env
