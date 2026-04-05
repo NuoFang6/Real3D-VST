@@ -172,6 +172,9 @@ private:
 				// subtract the signal from the other channels
 				for (unsigned c=0;c<C-1;c++)
 					signal[c][f] *= (1-lfe_level);
+			} else {
+				// Clear the LFE bin when unused (prevents ringing/feedback due to stale memory buffer)
+				signal[C-1][f] = cplx(0, 0);
 			}
 		}
 
