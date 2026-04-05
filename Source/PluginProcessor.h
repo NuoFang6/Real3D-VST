@@ -59,10 +59,10 @@ private:
     std::unique_ptr<freesurround_decoder> decoder;
 
     // 用于保存当前的采样率，以便在参数更新时使用
-    double currentSampleRate = 44100.0;
+    double currentSampleRate = 48000.0;
 
-    // 默认声道配置 (5.1)
-    channel_setup currentSetup = cs_5point1;
+    // 默认声道配置 (7.1)
+    channel_setup currentSetup = cs_7point1;
 
     // 参数 ID 定义
     static inline const juce::ParameterID

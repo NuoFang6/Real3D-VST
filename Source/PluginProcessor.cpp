@@ -44,7 +44,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout Real3DVSTAudioProcessor::cre
     params.push_back (std::make_unique<juce::AudioParameterBool> (useLfeID, "Use LFE", false));
 
     juce::StringArray setupNames { "Stereo", "3-Stereo", "4.1 Surround", "5.1 Surround", "5-Stereo", "Legacy 5.1", "6.1 Surround", "7.1 Surround", "7.1 Panorama", "7.1 Tri-Center", "8.1 Surround", "9.1 Wrap", "9.1 Dense Panorama", "11.1 Dense Wrap", "13.1 Total Wrap", "16.1 Surround" };
-    params.push_back (std::make_unique<juce::AudioParameterChoice> (channelSetupID, "Output Configuration", setupNames, 3));
+      params.push_back (std::make_unique<juce::AudioParameterChoice> (channelSetupID, "Output Configuration", setupNames, 7));
 
     return { params.begin(), params.end() };
 }
@@ -72,7 +72,7 @@ void Real3DVSTAudioProcessor::updateParameters()
         cs_8point1, cs_9point1_wrap, cs_9point1_densepanorama,
         cs_11point1_densewrap, cs_13point1_totalwrap, cs_16point1
     };
-    
+
     if (setups[setupIdx] != currentSetup) {
         currentSetup = setups[setupIdx];
         decoder.reset (new freesurround_decoder (currentSetup, fftSize));
@@ -157,7 +157,7 @@ void Real3DVSTAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     outFifo.setSize (32, fftSize * 4);
     inFifo.clear();
     outFifo.clear();
-    
+
     fifoReadIdx = 0;
     fifoWriteIdx = 0;
     outFifoReadIdx = 0;
@@ -194,7 +194,7 @@ static int getWindowsRank (channel_id id)
         case ci_side_back_right: return 14;
         case ci_back_center_left: return 15;
         case ci_back_center_right: return 16;
-        default: return 999; 
+        default: return 999;
     }
 }
 
@@ -203,10 +203,10 @@ bool Real3DVSTAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts
 {
     const int numInputChannels = layouts.getMainInputChannelSet().size();
     const int numOutputChannels = layouts.getMainOutputChannelSet().size();
-    
+
     if (numInputChannels < 2)
         return false;
-        
+
     if (numOutputChannels < 2)
         return false;
 
@@ -258,7 +258,7 @@ void Real3DVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
                 outFifo.setSample (c, (outFifoWriteIdx + s) % outFifo.getNumSamples(), decoded[s * numOutChannels + c]);
             }
         }
-        
+
         fifoReadIdx = (fifoReadIdx + fftSize) % inFifo.getNumSamples();
         outFifoWriteIdx = (outFifoWriteIdx + fftSize) % outFifo.getNumSamples();
         samplesInInFifo = (fifoWriteIdx - fifoReadIdx + inFifo.getNumSamples()) % inFifo.getNumSamples();
@@ -267,7 +267,7 @@ void Real3DVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     // 3. 读输出 FIFO (考虑到延迟，FreeSurround 内部 decode 已经包含了 N/2 的固定延迟效果)
     // 我们只要保证有数据就读
     int samplesInOutFifo = (outFifoWriteIdx - outFifoReadIdx + outFifo.getNumSamples()) % outFifo.getNumSamples();
-    
+
     if (samplesInOutFifo < numSamples) {
         buffer.clear();
     } else {
@@ -276,7 +276,7 @@ void Real3DVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         }
 
         int fsNumChannels = decoder->num_channels (currentSetup);
-        
+
         // Calculate ranks for all active channels in the decoder
         std::vector<std::pair<int, int>> rankAndIndex; // pair of <WFE_rank, fsChan_index>
         for (int fsChan = 0; fsChan < fsNumChannels; ++fsChan) {
@@ -284,7 +284,7 @@ void Real3DVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             int rank = getWindowsRank (cid);
             rankAndIndex.push_back ({rank, fsChan});
         }
-        
+
         // Sort by WFE rank
         std::sort (rankAndIndex.begin(), rankAndIndex.end(), [](const auto& a, const auto& b) {
             return a.first < b.first;
