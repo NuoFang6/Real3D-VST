@@ -65,7 +65,7 @@ private:
     channel_setup currentSetup = cs_5point1;
 
     // 参数 ID 定义
-    static inline const juce::ParameterID 
+    static inline const juce::ParameterID
         centerImageID {"center_image", 1},
         shiftID {"shift", 1},
         depthID {"depth", 1},
@@ -96,7 +96,7 @@ private:
 
     // 临时缓冲区用于交错/反交错
     std::vector<float> processInputBuffer; // 2 * fftSize
-    
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Real3DVSTAudioProcessor)
 };

@@ -29,7 +29,7 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
     Real3DVSTAudioProcessor& audioProcessor;
-    
+
     juce::GenericAudioProcessorEditor genericEditor;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Real3DVSTAudioProcessorEditor)
