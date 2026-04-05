@@ -10,6 +10,7 @@ Real3D-VST 是一个专为多通道环绕声上混（Upmixer）设计的音频�
 
 [![Real3D-VST Screenshot](screenshot.png)](screenshot.png)
 **你可能需要对 HeSuVi 的配置进行额外处理，内置的声道识别与上混可能会冲突**
+参考详细教程：[结合 Real3D-VST 与 HeSuVi 的配置教程](Real3D-VST_HeSuVi_Tutorial.md)
 
 ### 项目结构
 
@@ -57,6 +58,7 @@ Real3D-VST is a specialized audio plugin designed for multi-channel surround sou
 
 [![Real3D-VST Screenshot](screenshot.png)](screenshot.png)
 **Special handling for HeSuVi configuration may be required, as built-in channel identification and upmixing might conflict.**
+Please refer to the detailed tutorial: [Configuration Tutorial: Combining Real3D-VST with HeSuVi](Real3D-VST_HeSuVi_Tutorial_EN.md)
 
 ### Project Structure
 
