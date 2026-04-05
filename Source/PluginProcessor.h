@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+#include <juce_audio_processors/juce_audio_processors.h>
 #include "dsp/freesurround_decoder.h" // 包含你的原版头文件
 
 //==============================================================================

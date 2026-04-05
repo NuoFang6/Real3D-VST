@@ -26,7 +26,7 @@ Real3D-VST 是一个专为多通道环绕声上混（Upmixer）设计的音频�
     - **CMake** (版本 3.22 或更高)
     - **JUCE 框架**: 默认路径需位于 `C:/JUCE`（若不同请在 [CMakeLists.txt](CMakeLists.txt) 中配置）。
     - **编译器**:
-        - Windows: Visual Studio 2022 (v143)
+        - Windows: Visual Studio 2026 与 c++ 开发工具集
         - macOS: Xcode
         - Linux: GCC / Clang
 
@@ -73,7 +73,7 @@ Real3D-VST is a specialized audio plugin designed for multi-channel surround sou
     - **CMake** (v3.22 or higher)
     - **JUCE Framework**: Expected at `C:/JUCE` by default (configurable in [CMakeLists.txt](CMakeLists.txt)).
     - **Compiler**:
-        - Windows: Visual Studio 2022 (v143)
+        - Windows: Visual Studio 2026 with C++ development tools
         - macOS: Xcode
         - Linux: GCC / Clang
 

@@ -1,4 +1,4 @@
-/*
+ï»¿/*
 Copyright (C) 2007-2010 Christian Kothe
 
 This program is free software; you can redistribute it and/or
@@ -124,9 +124,9 @@ public:
 	/**
 	* Allows to wrap the soundfield around the listener in a circular manner.
 	* Determines the angle of the frontal sound stage relative to the listener, in degrees.
-	* A setting of 90° corresponds to standard surround decoding, 180° stretches the front stage from 
-	* ear to ear, 270° wraps it around most of the head. The side and rear content of the sound 
-	* field is compressed accordingly behind the listerer. (default: 90, range: [0°..360°])
+	* A setting of 90ï¿½ corresponds to standard surround decoding, 180ï¿½ stretches the front stage from 
+	* ear to ear, 270ï¿½ wraps it around most of the head. The side and rear content of the sound 
+	* field is compressed accordingly behind the listerer. (default: 90, range: [0ï¿½..360ï¿½])
 	*/
 	void circular_wrap(float v);
 
