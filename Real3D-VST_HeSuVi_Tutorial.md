@@ -58,6 +58,11 @@
     # 2. 加载你的 VST 插件 (路径和参数根据实际情况为准)
     VSTPlugin: Library C:\9919\code\Real3D-VST\build\Real3D-VST_artefacts\Release\VST\Real3D-VST.dll ChunkData "..."
 
+    # 可选优化 (HRTF 角度匹配补丁) - 将原版 30/90/135 度重分布为匹配 FreeSurround 底层矩阵的 27/95/142 度
+    # 预防矩阵叠加导致的电平溢出
+    Preamp: -1.5 dB
+    Copy: L=0.95*L R=0.95*R C=0.15*L+0.15*R+C SUB=SUB SL=0.95*SL SR=0.95*SR RL=0.90*RL+0.15*SL+0.05*RR RR=0.90*RR+0.15*SR+0.05*RL
+
     # 3. 加载 HeSuVi
     Include: HeSuVi\hesuvi.txt
 
