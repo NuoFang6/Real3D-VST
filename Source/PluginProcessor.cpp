@@ -41,7 +41,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout Real3DVSTAudioProcessor::cre
     params.push_back (std::make_unique<juce::AudioParameterFloat> (rearSepID, "Rear Separation", 0.0f, 2.0f, 1.0f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (bassLoID, "Bass Redirect Lo", 0.0f, 150.0f, 40.0f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (bassHiID, "Bass Redirect Hi", 0.0f, 150.0f, 90.0f));
-    params.push_back (std::make_unique<juce::AudioParameterBool> (useLfeID, "Use LFE", false));
+    params.push_back (std::make_unique<juce::AudioParameterBool> (useLfeID, "Use LFE", true));
 
     juce::StringArray setupNames { "Stereo", "3-Stereo", "4.1 Surround", "5.1 Surround", "5-Stereo", "Legacy 5.1", "6.1 Surround", "7.1 Surround", "7.1 Panorama", "7.1 Tri-Center", "8.1 Surround", "9.1 Wrap", "9.1 Dense Panorama", "11.1 Dense Wrap", "13.1 Total Wrap", "16.1 Surround" };
       params.push_back (std::make_unique<juce::AudioParameterChoice> (channelSetupID, "Output Configuration", setupNames, 7));
@@ -234,8 +234,20 @@ void Real3DVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         return;
     }
 
-    // Encountering an unhandleable number of channels (e.g., > 2), we skip processing (bypass)
+    bool isActuallyStereo = (totalNumInputChannels == 2);
     if (totalNumInputChannels > 2) {
+        bool extraChannelsSilent = true;
+        for (int ch = 2; ch < totalNumInputChannels; ++ch) {
+            if (buffer.getMagnitude (ch, 0, numSamples) > 1e-6f) {
+                extraChannelsSilent = false;
+                break;
+            }
+        }
+        isActuallyStereo = extraChannelsSilent;
+    }
+
+    // Encountering an unhandleable number of channels (e.g., > 2) and they aren't silent, we skip processing (bypass)
+    if (!isActuallyStereo) {
         int delayLen = bypassBuffer.getNumSamples();
         if (delayLen > 0) {
             int maxChans = juce::jmin (totalNumInputChannels, bypassBuffer.getNumChannels());

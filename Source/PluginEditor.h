@@ -31,6 +31,7 @@ private:
     Real3DVSTAudioProcessor& audioProcessor;
 
     juce::GenericAudioProcessorEditor genericEditor;
+    juce::TextButton resetButton;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Real3DVSTAudioProcessorEditor)
 };

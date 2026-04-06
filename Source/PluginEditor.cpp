@@ -14,7 +14,17 @@ Real3DVSTAudioProcessorEditor::Real3DVSTAudioProcessorEditor (Real3DVSTAudioProc
     : AudioProcessorEditor (&p), audioProcessor (p), genericEditor (p)
 {
     addAndMakeVisible (genericEditor);
-    
+
+    resetButton.setButtonText ("Reset Configuration");
+    resetButton.onClick = [this]() {
+        for (auto* param : audioProcessor.getParameters()) {
+            if (auto* rangedParam = dynamic_cast<juce::RangedAudioParameter*> (param)) {
+                rangedParam->setValueNotifyingHost (rangedParam->getDefaultValue());
+            }
+        }
+    };
+    addAndMakeVisible (resetButton);
+
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
     setSize (450, 700);
@@ -35,5 +45,7 @@ void Real3DVSTAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
-    genericEditor.setBounds (getLocalBounds());
+    auto area = getLocalBounds();
+    resetButton.setBounds (area.removeFromBottom (30).reduced (10, 2));
+    genericEditor.setBounds (area);
 }
