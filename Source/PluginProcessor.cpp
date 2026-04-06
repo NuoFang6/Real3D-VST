@@ -87,7 +87,7 @@ Real3DVSTAudioProcessor::~Real3DVSTAudioProcessor()
 //==============================================================================
 const juce::String Real3DVSTAudioProcessor::getName() const
 {
-    return JucePlugin_Name;
+    return "Real3D-VST";
 }
 
 bool Real3DVSTAudioProcessor::acceptsMidi() const
@@ -165,8 +165,14 @@ void Real3DVSTAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 
     processInputBuffer.assign (fftSize * 2, 0.0f);
 
+    int latencyP = fftSize + (fftSize / 2);
+    // 准备旁通(bypass)延迟线，最多支持16通道的延迟（预留足够通道）
+    bypassBuffer.setSize (32, latencyP);
+    bypassBuffer.clear();
+    bypassWriteIdx = 0;
+
     // Report total latency to host: FIFO buffering latency (fftSize) + freesurround_decoder algorithmic latency (fftSize / 2)
-    setLatencySamples (fftSize + (fftSize / 2));
+    setLatencySamples (latencyP);
 }
 
 void Real3DVSTAudioProcessor::releaseResources()
@@ -225,6 +231,32 @@ void Real3DVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     if (!decoder || totalNumInputChannels < 2) {
         buffer.clear();
+        return;
+    }
+
+    // Encountering an unhandleable number of channels (e.g., > 2), we skip processing (bypass)
+    if (totalNumInputChannels > 2) {
+        int delayLen = bypassBuffer.getNumSamples();
+        if (delayLen > 0) {
+            int maxChans = juce::jmin (totalNumInputChannels, bypassBuffer.getNumChannels());
+            for (int ch = 0; ch < maxChans; ++ch) {
+                float* inOutData = buffer.getWritePointer (ch);
+                float* delayData = bypassBuffer.getWritePointer (ch);
+                int idx = bypassWriteIdx;
+
+                for (int s = 0; s < numSamples; ++s) {
+                    float inSample = inOutData[s];
+                    inOutData[s] = delayData[idx];
+                    delayData[idx] = inSample;
+                    idx = (idx + 1) % delayLen;
+                }
+            }
+            bypassWriteIdx = (bypassWriteIdx + numSamples) % delayLen;
+        }
+
+        for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i) {
+            buffer.clear (i, 0, numSamples);
+        }
         return;
     }
 

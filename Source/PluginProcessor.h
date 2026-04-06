@@ -94,6 +94,10 @@ private:
     int outFifoWriteIdx = 0;
     static constexpr int fftSize = 4096; // 核心处理块大小
 
+    // 旁通（Bypass）延迟缓冲，用于通道数>2时的延迟补偿
+    juce::AudioBuffer<float> bypassBuffer;
+    int bypassWriteIdx = 0;
+
     // 临时缓冲区用于交错/反交错
     std::vector<float> processInputBuffer; // 2 * fftSize
 

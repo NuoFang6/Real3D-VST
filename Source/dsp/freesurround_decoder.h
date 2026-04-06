@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 * Identifiers for the supported output channels (from front to back, left to right).
 * The ordering here also determines the ordering of interleaved samples in the output signal.
 */
-typedef enum channel_id {
+enum channel_id {
 	ci_none					= 0,
 	ci_front_left			= 1<<1,
 	ci_front_center_left	= 1<<2,
@@ -46,10 +46,10 @@ typedef enum channel_id {
 
 /**
 * The supported output channel setups.
-* A channel setup is defined by the set of channels that are present. Here is a graphic 
+* A channel setup is defined by the set of channels that are present. Here is a graphic
 * of the cs_5point1 setup: http://en.wikipedia.org/wiki/File:5_1_channels_(surround_sound)_label.svg
 */
-typedef enum channel_setup {
+enum channel_setup {
 	cs_stereo = ci_front_left | ci_front_right | ci_lfe,
 	cs_3stereo = ci_front_left | ci_front_center | ci_front_right | ci_lfe,
 	cs_5stereo = ci_front_left | ci_front_center_left | ci_front_center | ci_front_center_right | ci_front_right | ci_lfe,
@@ -57,24 +57,24 @@ typedef enum channel_setup {
 	cs_5point1 = ci_front_left | ci_front_center | ci_front_right | ci_back_left | ci_back_right | ci_lfe,
 	cs_6point1 = ci_front_left | ci_front_center | ci_front_right | ci_side_center_left | ci_side_center_right | ci_back_center | ci_lfe,
 	cs_7point1 = ci_front_left | ci_front_center | ci_front_right | ci_side_center_left | ci_side_center_right | ci_back_left | ci_back_right | ci_lfe,
-	cs_7point1_panorama = ci_front_left | ci_front_center_left | ci_front_center | ci_front_center_right | ci_front_right | 
+	cs_7point1_panorama = ci_front_left | ci_front_center_left | ci_front_center | ci_front_center_right | ci_front_right |
 						  ci_side_center_left | ci_side_center_right | ci_lfe,
 	cs_7point1_tricenter = ci_front_left | ci_front_center_left | ci_front_center | ci_front_center_right | ci_front_right |
 						   ci_back_left | ci_back_right | ci_lfe,
-	cs_8point1 = ci_front_left | ci_front_center | ci_front_right | ci_side_center_left | ci_side_center_right | 
+	cs_8point1 = ci_front_left | ci_front_center | ci_front_right | ci_side_center_left | ci_side_center_right |
 				 ci_back_left | ci_back_center | ci_back_right | ci_lfe,
-	cs_9point1_densepanorama = ci_front_left | ci_front_center_left | ci_front_center | ci_front_center_right | ci_front_right | 
+	cs_9point1_densepanorama = ci_front_left | ci_front_center_left | ci_front_center | ci_front_center_right | ci_front_right |
 							   ci_side_front_left | ci_side_front_right | ci_side_center_left | ci_side_center_right | ci_lfe,
-	cs_9point1_wrap = ci_front_left | ci_front_center_left | ci_front_center | ci_front_center_right | ci_front_right | 
+	cs_9point1_wrap = ci_front_left | ci_front_center_left | ci_front_center | ci_front_center_right | ci_front_right |
 					  ci_side_center_left | ci_side_center_right | ci_back_left | ci_back_right | ci_lfe,
-	cs_11point1_densewrap = ci_front_left | ci_front_center_left | ci_front_center | ci_front_center_right | ci_front_right | 
-					       ci_side_front_left | ci_side_front_right | ci_side_center_left | ci_side_center_right | 
+	cs_11point1_densewrap = ci_front_left | ci_front_center_left | ci_front_center | ci_front_center_right | ci_front_right |
+					       ci_side_front_left | ci_side_front_right | ci_side_center_left | ci_side_center_right |
 						   ci_side_back_left | ci_side_back_right | ci_lfe,
-	cs_13point1_totalwrap = ci_front_left | ci_front_center_left | ci_front_center | ci_front_center_right | ci_front_right | 
-					       ci_side_front_left | ci_side_front_right | ci_side_center_left | ci_side_center_right | 
+	cs_13point1_totalwrap = ci_front_left | ci_front_center_left | ci_front_center | ci_front_center_right | ci_front_right |
+					       ci_side_front_left | ci_side_front_right | ci_side_center_left | ci_side_center_right |
 						   ci_side_back_left | ci_side_back_right | ci_back_left | ci_back_right | ci_lfe,
-	cs_16point1 = ci_front_left | ci_front_center_left | ci_front_center | ci_front_center_right | ci_front_right | 
-			      ci_side_front_left | ci_side_front_right | ci_side_center_left | ci_side_center_right | ci_side_back_left | 
+	cs_16point1 = ci_front_left | ci_front_center_left | ci_front_center | ci_front_center_right | ci_front_right |
+			      ci_side_front_left | ci_side_front_right | ci_side_center_left | ci_side_center_right | ci_side_back_left |
 				  ci_side_back_right | ci_back_left | ci_back_center_left | ci_back_center | ci_back_center_right | ci_back_right | ci_lfe,
 	cs_legacy = 0 // same channels as cs_5point1 but different upmixing transform; does not support the focus control
 };
@@ -88,12 +88,12 @@ public:
 
 	/**
 	* Create an instance of the decoder.
-	* @param setup The output channel setup -- determines the number of output channels 
+	* @param setup The output channel setup -- determines the number of output channels
 	*			   and their place in the sound field.
 	* @param blocksize Granularity at which data is processed by the decode() function.
-	*				   Must be a power of two and should correspond to ca. 10ms worth of single-channel 
-	*				   samples (default is 4096 for 44.1Khz data). Do not make it shorter or longer 
-	*				   than 5ms to 20ms since the granularity at which locations are decoded 
+	*				   Must be a power of two and should correspond to ca. 10ms worth of single-channel
+	*				   samples (default is 4096 for 44.1Khz data). Do not make it shorter or longer
+	*				   than 5ms to 20ms since the granularity at which locations are decoded
 	*				   changes with this.
 	*/
 	freesurround_decoder(channel_setup setup=cs_5point1, unsigned blocksize=4096);
@@ -103,36 +103,36 @@ public:
 	* Decode a chunk of stereo sound. The output is delayed by half of the blocksize.
 	* This function is the only one needed for straightforward decoding.
 	* @param input Contains exactly blocksize (multiplexed) stereo samples, i.e. 2*blocksize numbers.
-	* @return A pointer to an internal buffer of exactly blocksize (multiplexed) multichannel samples. 
-	*		  The actual number of values depends on the number of output channels in the chosen 
+	* @return A pointer to an internal buffer of exactly blocksize (multiplexed) multichannel samples.
+	*		  The actual number of values depends on the number of output channels in the chosen
 	*		  channel setup.
 	*/
 	float *decode(float *input);
-	
-	/** 
-	* Flush the internal buffer. 
+
+	/**
+	* Flush the internal buffer.
 	*/
 	void flush();
 
 
 	// --- soundfield transformations
 	// These functions allow to set up geometric transformations of the sound field after it has been decoded.
-	// The sound field is best pictured as a 2-dimensional square with the listener in its 
-	// center which can be shifted or stretched in various ways before it is sent to the 
+	// The sound field is best pictured as a 2-dimensional square with the listener in its
+	// center which can be shifted or stretched in various ways before it is sent to the
 	// speakers. The order in which these transformations are applied is as listed below.
-	
+
 	/**
 	* Allows to wrap the soundfield around the listener in a circular manner.
 	* Determines the angle of the frontal sound stage relative to the listener, in degrees.
-	* A setting of 90� corresponds to standard surround decoding, 180� stretches the front stage from 
-	* ear to ear, 270� wraps it around most of the head. The side and rear content of the sound 
+	* A setting of 90� corresponds to standard surround decoding, 180� stretches the front stage from
+	* ear to ear, 270� wraps it around most of the head. The side and rear content of the sound
 	* field is compressed accordingly behind the listerer. (default: 90, range: [0�..360�])
 	*/
 	void circular_wrap(float v);
 
 	/**
 	* Allows to shift the soundfield forward or backward.
-	* Value range: [-1.0..+1.0]. 0 is no offset, positive values move the sound 
+	* Value range: [-1.0..+1.0]. 0 is no offset, positive values move the sound
 	* forward, negative values move it backwards. (default: 0)
 	*/
 	void shift(float v);
@@ -156,7 +156,7 @@ public:
 	/**
 	* Set the presence of the front center channel(s).
 	* Value range: [0.0..1.0] -- fully present at 1.0, fully replaced by left/right at 0.0 (default: 1).
-	* The default of 1.0 results in spec-conformant decoding ("movie mode") while a value of 0.7 is 
+	* The default of 1.0 results in spec-conformant decoding ("movie mode") while a value of 0.7 is
 	* better suited for music reproduction (which is usually mixed without a center channel).
 	*/
 	void center_image(float v);
@@ -176,7 +176,7 @@ public:
 
 	// --- bass redirection (to LFE)
 
-	/** 
+	/**
 	* Enable/disable LFE channel (default: false = disabled)
 	*/
 	void bass_redirection(bool v);
@@ -199,7 +199,7 @@ public:
 	*/
 	unsigned buffered();
 
-	/** 
+	/**
 	* Number of channels in the given setup.
 	*/
 	static unsigned num_channels(channel_setup s);
