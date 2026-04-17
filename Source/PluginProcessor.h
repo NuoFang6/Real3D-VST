@@ -10,6 +10,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "dsp/freesurround_decoder.h" // 包含你的原版头文件
+#include <atomic>
 
 //==============================================================================
 /**
@@ -76,6 +77,7 @@ private:
         bassLoID {"bass_lo", 1},
         bassHiID {"bass_hi", 1},
         useLfeID {"use_lfe", 1},
+        debugLogID {"debug_log", 1},
         channelSetupID {"channel_setup", 1};
 
     // 内部函数用于同步参数到解码器
@@ -90,8 +92,11 @@ private:
     juce::AudioBuffer<float> outFifo;
     int fifoReadIdx = 0;
     int fifoWriteIdx = 0;
+    int inFifoFill = 0;
     int outFifoReadIdx = 0;
     int outFifoWriteIdx = 0;
+    int outFifoFill = 0;
+    int configuredFifoSize = 0;
     static constexpr int fftSize = 4096; // 核心处理块大小
 
     // 旁通（Bypass）延迟缓冲，用于通道数>2时的延迟补偿
@@ -100,6 +105,23 @@ private:
 
     // 临时缓冲区用于交错/反交错
     std::vector<float> processInputBuffer; // 2 * fftSize
+
+    // Debug 日志
+    std::unique_ptr<juce::FileLogger> debugLogger;
+    std::atomic<bool> debugLoggingEnabled { false };
+    uint64_t processBlockCounter = 0;
+    channel_setup lastLoggedSetup = cs_legacy;
+    int lastLoggedHostOutChannels = -1;
+    int lastLoggedDecoderOutChannels = -1;
+    bool lastLoggedStereoDecision = true;
+    int nonStereoConsecutiveBlocks = 0;
+
+    bool isDebugLoggingActive() const;
+    void ensureDebugLogger();
+    void logDebugMessage(const juce::String& msg);
+    static const char* channelIdToName(channel_id id);
+    static const char* setupToName(channel_setup setup);
+    static juce::String describeSetupChannels(channel_setup setup);
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Real3DVSTAudioProcessor)
