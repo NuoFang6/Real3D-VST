@@ -40,10 +40,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout Real3DVSTAudioProcessor::cre
     params.push_back (std::make_unique<juce::AudioParameterFloat> (focusID, "Focus", -1.0f, 1.0f, 0.0f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (frontSepID, "Front Separation", 0.0f, 2.0f, 1.0f));
     params.push_back (std::make_unique<juce::AudioParameterFloat> (rearSepID, "Rear Separation", 0.0f, 2.0f, 1.0f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (bassLoID, "Bass Redirect Lo", 0.0f, 150.0f, 40.0f));
-    params.push_back (std::make_unique<juce::AudioParameterFloat> (bassHiID, "Bass Redirect Hi", 0.0f, 150.0f, 90.0f));
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (bassLoID, "Bass Redirect Lo", 0.0f, 150.0f, 80.0f)); // 原来是40
+    params.push_back (std::make_unique<juce::AudioParameterFloat> (bassHiID, "Bass Redirect Hi", 0.0f, 150.0f, 111.0f)); // 原来是90
     params.push_back (std::make_unique<juce::AudioParameterBool> (useLfeID, "Use LFE", true));
-    params.push_back (std::make_unique<juce::AudioParameterBool> (debugLogID, "Debug Log", false));
 
     juce::StringArray setupNames { "Stereo", "3-Stereo", "4.1 Surround", "5.1 Surround", "5-Stereo", "Legacy 5.1", "6.1 Surround", "7.1 Surround", "7.1 Panorama", "7.1 Tri-Center", "8.1 Surround", "9.1 Wrap", "9.1 Dense Panorama", "11.1 Dense Wrap", "13.1 Total Wrap", "16.1 Surround" };
       params.push_back (std::make_unique<juce::AudioParameterChoice> (channelSetupID, "Output Configuration", setupNames, 7));
@@ -54,8 +53,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout Real3DVSTAudioProcessor::cre
 void Real3DVSTAudioProcessor::updateParameters()
 {
     if (!decoder) return;
-
-    debugLoggingEnabled.store (apvts.getRawParameterValue ("debug_log")->load() > 0.5f);
 
     decoder->center_image (apvts.getRawParameterValue ("center_image")->load());
     decoder->shift (apvts.getRawParameterValue ("shift")->load());
@@ -81,50 +78,11 @@ void Real3DVSTAudioProcessor::updateParameters()
         currentSetup = setups[setupIdx];
         decoder.reset (new freesurround_decoder (currentSetup, fftSize));
         updateParameters(); // 重新应用参数
-
-        logDebugMessage ("Channel setup changed to " + juce::String (setupToName (currentSetup))
-            + ", decoder channels=" + juce::String ((int) decoder->num_channels (currentSetup))
-            + ", setup channels=" + describeSetupChannels (currentSetup));
     }
 }
 
 Real3DVSTAudioProcessor::~Real3DVSTAudioProcessor()
 {
-    logDebugMessage ("Processor destroyed");
-}
-
-bool Real3DVSTAudioProcessor::isDebugLoggingActive() const
-{
-    return debugLoggingEnabled.load();
-}
-
-void Real3DVSTAudioProcessor::ensureDebugLogger()
-{
-    if (debugLogger != nullptr)
-        return;
-
-    auto targetDir = juce::File::getSpecialLocation (juce::File::userDocumentsDirectory)
-        .getChildFile ("Real3D-VST")
-        .getChildFile ("Logs");
-
-    if (!targetDir.exists())
-        targetDir.createDirectory();
-
-    debugLogger.reset (juce::FileLogger::createDateStampedLogger (
-        targetDir.getFullPathName(),
-        "Real3D-VST-Debug",
-        ".log",
-        "Real3D-VST debug logging started"));
-}
-
-void Real3DVSTAudioProcessor::logDebugMessage (const juce::String& msg)
-{
-    if (!isDebugLoggingActive())
-        return;
-
-    ensureDebugLogger();
-    if (debugLogger != nullptr)
-        debugLogger->logMessage (msg);
 }
 
 const char* Real3DVSTAudioProcessor::channelIdToName (channel_id id)
@@ -267,12 +225,7 @@ void Real3DVSTAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
     outFifoReadIdx = 0;
     outFifoWriteIdx = fftSize; // Pre-fill with one block of silence for FIFO buffering
     outFifoFill = fftSize;
-    processBlockCounter = 0;
     nonStereoConsecutiveBlocks = 0;
-    lastLoggedHostOutChannels = -1;
-    lastLoggedDecoderOutChannels = -1;
-    lastLoggedSetup = cs_legacy;
-    lastLoggedStereoDecision = true;
 
     processInputBuffer.assign (fftSize * 2, 0.0f);
 
@@ -284,19 +237,10 @@ void Real3DVSTAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBl
 
     // Report total latency to host: FIFO buffering latency (fftSize) + freesurround_decoder algorithmic latency (fftSize / 2)
     setLatencySamples (latencyP);
-
-    logDebugMessage ("prepareToPlay sr=" + juce::String (sampleRate)
-        + ", block=" + juce::String (samplesPerBlock)
-        + ", setup=" + juce::String (setupToName (currentSetup))
-        + ", decoderChannels=" + juce::String ((int) decoder->num_channels (currentSetup))
-        + ", latency=" + juce::String (latencyP)
-        + ", fifoSize=" + juce::String (configuredFifoSize)
-        + ", outPrefill=" + juce::String (outFifoFill));
 }
 
 void Real3DVSTAudioProcessor::releaseResources()
 {
-    logDebugMessage ("releaseResources");
     decoder.reset();
 }
 
@@ -346,15 +290,10 @@ void Real3DVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
     const int numSamples = buffer.getNumSamples();
-    ++processBlockCounter;
 
     updateParameters();
 
     if (!decoder || totalNumInputChannels < 2) {
-        logDebugMessage ("processBlock#" + juce::String ((int) processBlockCounter)
-            + " invalid decoder/input, in=" + juce::String ((int) totalNumInputChannels)
-            + ", out=" + juce::String ((int) totalNumOutputChannels)
-            + ", cleared=true");
         buffer.clear();
         return;
     }
@@ -372,6 +311,7 @@ void Real3DVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             }
             if (mag > 1e-6f) {
                 extraChannelsSilent = false;
+                break;
             }
         }
         isActuallyStereo = extraChannelsSilent;
@@ -379,10 +319,6 @@ void Real3DVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
         if (!isActuallyStereo) {
             ++nonStereoConsecutiveBlocks;
             if (nonStereoConsecutiveBlocks <= 2) {
-                logDebugMessage ("processBlock#" + juce::String ((int) processBlockCounter)
-                    + " transient non-stereo ignored, consecutive=" + juce::String (nonStereoConsecutiveBlocks)
-                    + ", maxExtraCh=" + juce::String (maxExtraChannel)
-                    + ", maxExtraMag=" + juce::String (maxExtraMagnitude, 8));
                 isActuallyStereo = true;
             }
         } else {
@@ -392,16 +328,6 @@ void Real3DVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     // Encountering an unhandleable number of channels (e.g., > 2) and they aren't silent, we skip processing (bypass)
     if (!isActuallyStereo) {
-        if (isDebugLoggingActive()) {
-            logDebugMessage ("processBlock#" + juce::String ((int) processBlockCounter)
-                + " bypass non-stereo input, in=" + juce::String ((int) totalNumInputChannels)
-                + ", out=" + juce::String ((int) totalNumOutputChannels)
-                + ", samples=" + juce::String (numSamples)
-                + ", consecutive=" + juce::String (nonStereoConsecutiveBlocks)
-                + ", maxExtraCh=" + juce::String (maxExtraChannel)
-                + ", maxExtraMag=" + juce::String (maxExtraMagnitude, 8));
-        }
-
         int delayLen = bypassBuffer.getNumSamples();
         if (delayLen > 0) {
             int maxChans = juce::jmin (totalNumInputChannels, bypassBuffer.getNumChannels());
@@ -434,41 +360,11 @@ void Real3DVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
     const int fsNumChannels = decoder->num_channels (currentSetup);
 
-    if (isDebugLoggingActive()) {
-        const bool shouldLogTopology = (lastLoggedSetup != currentSetup)
-            || (lastLoggedHostOutChannels != (int) totalNumOutputChannels)
-            || (lastLoggedDecoderOutChannels != fsNumChannels)
-            || (lastLoggedStereoDecision != isActuallyStereo)
-            || (processBlockCounter <= 5)
-            || (processBlockCounter % 512 == 0);
-
-        if (shouldLogTopology) {
-            lastLoggedSetup = currentSetup;
-            lastLoggedHostOutChannels = (int) totalNumOutputChannels;
-            lastLoggedDecoderOutChannels = fsNumChannels;
-            lastLoggedStereoDecision = isActuallyStereo;
-
-            logDebugMessage ("processBlock#" + juce::String ((int) processBlockCounter)
-                + " io in=" + juce::String ((int) totalNumInputChannels)
-                + ", out=" + juce::String ((int) totalNumOutputChannels)
-                + ", samples=" + juce::String (numSamples)
-                + ", setup=" + juce::String (setupToName (currentSetup))
-                + ", decoderCh=" + juce::String (fsNumChannels)
-                + ", lrIdx=(" + juce::String (leftIdx) + "," + juce::String (rightIdx) + ")"
-                + ", isStereo=" + juce::String (isActuallyStereo ? "true" : "false")
-                + ", setupOrder=[" + describeSetupChannels (currentSetup) + "]");
-        }
-    }
-
-    int inDroppedSamples = 0;
-    int outDroppedSamples = 0;
-
     // 1. 写输入 FIFO
     for (int s = 0; s < numSamples; ++s) {
         if (inFifoFill >= inFifo.getNumSamples()) {
             fifoReadIdx = (fifoReadIdx + 1) % inFifo.getNumSamples();
             --inFifoFill;
-            ++inDroppedSamples;
         }
 
         inFifo.setSample (0, (fifoWriteIdx + s) % inFifo.getNumSamples(), buffer.getSample (leftIdx, s));
@@ -493,7 +389,6 @@ void Real3DVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
             if (outFifoFill >= outFifo.getNumSamples()) {
                 outFifoReadIdx = (outFifoReadIdx + 1) % outFifo.getNumSamples();
                 --outFifoFill;
-                ++outDroppedSamples;
             }
 
             for (int c = 0; c < numOutChannels; ++c) {
@@ -513,21 +408,7 @@ void Real3DVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     // 我们只要保证有数据就读
     const int samplesInOutFifo = outFifoFill;
 
-    if (isDebugLoggingActive() && (inDroppedSamples > 0 || outDroppedSamples > 0 || processBlockCounter <= 5 || processBlockCounter % 256 == 0)) {
-        logDebugMessage ("processBlock#" + juce::String ((int) processBlockCounter)
-            + " fifo inFill=" + juce::String (inFifoFill)
-            + ", outFill=" + juce::String (outFifoFill)
-            + ", decodePasses=" + juce::String (decodePasses)
-            + ", inDropped=" + juce::String (inDroppedSamples)
-            + ", outDropped=" + juce::String (outDroppedSamples)
-            + ", needOut=" + juce::String (numSamples));
-    }
-
     if (samplesInOutFifo < numSamples) {
-        logDebugMessage ("processBlock#" + juce::String ((int) processBlockCounter)
-            + " insufficient output fifo, have=" + juce::String (samplesInOutFifo)
-            + ", need=" + juce::String (numSamples)
-            + ", action=clear");
         buffer.clear();
     } else {
         for (int c = 0; c < totalNumOutputChannels; ++c) {
@@ -556,31 +437,6 @@ void Real3DVSTAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
 
             for (const auto& it : rankAndIndex)
                 outputFsOrder.push_back (it.second);
-        }
-
-        if (isDebugLoggingActive()) {
-            juce::StringArray mappingLines;
-            for (size_t portIndex = 0; portIndex < outputFsOrder.size(); ++portIndex) {
-                const int fsChan = outputFsOrder[portIndex];
-                const channel_id cid = freesurround_decoder::channel_at (currentSetup, (unsigned) fsChan);
-                const bool clippedByHost = (int) portIndex >= (int) totalNumOutputChannels;
-                mappingLines.add (
-                    "out" + juce::String ((int) portIndex)
-                    + "<=" + channelIdToName (cid)
-                    + "(fs=" + juce::String (fsChan)
-                    + ",mode=" + juce::String (useNativeFsOrder ? "native" : "rank")
-                    + (clippedByHost ? ",CLIPPED" : "")
-                    + ")");
-            }
-
-            if (processBlockCounter <= 5
-                || processBlockCounter % 512 == 0
-                || (int) totalNumOutputChannels < fsNumChannels) {
-                logDebugMessage ("processBlock#" + juce::String ((int) processBlockCounter)
-                    + " mapping hostOut=" + juce::String ((int) totalNumOutputChannels)
-                    + ", decoderOut=" + juce::String (fsNumChannels)
-                    + ", map=[" + mappingLines.joinIntoString ("; ") + "]");
-            }
         }
 
         // Map back to output buffers depending on output order (0 to fsNumChannels-1)

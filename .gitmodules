@@ -1,6 +1,6 @@
-[submodule "Real3D-foobar"]
-	path = Real3D-foobar
-	url = https://github.com/NRSC5-Fan/Real3D-Surround-Upmixer-.git
 [submodule "VST_SDK_2.4"]
 	path = VST_SDK_2.4
 	url = https://github.com/R-Tur/VST_SDK_2.4.git
+[submodule "kissfft"]
+	path = kissfft
+	url = https://github.com/mborgerding/kissfft

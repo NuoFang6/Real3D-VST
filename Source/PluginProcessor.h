@@ -77,7 +77,6 @@ private:
         bassLoID {"bass_lo", 1},
         bassHiID {"bass_hi", 1},
         useLfeID {"use_lfe", 1},
-        debugLogID {"debug_log", 1},
         channelSetupID {"channel_setup", 1};
 
     // 内部函数用于同步参数到解码器
@@ -105,20 +104,7 @@ private:
 
     // 临时缓冲区用于交错/反交错
     std::vector<float> processInputBuffer; // 2 * fftSize
-
-    // Debug 日志
-    std::unique_ptr<juce::FileLogger> debugLogger;
-    std::atomic<bool> debugLoggingEnabled { false };
-    uint64_t processBlockCounter = 0;
-    channel_setup lastLoggedSetup = cs_legacy;
-    int lastLoggedHostOutChannels = -1;
-    int lastLoggedDecoderOutChannels = -1;
-    bool lastLoggedStereoDecision = true;
     int nonStereoConsecutiveBlocks = 0;
-
-    bool isDebugLoggingActive() const;
-    void ensureDebugLogger();
-    void logDebugMessage(const juce::String& msg);
     static const char* channelIdToName(channel_id id);
     static const char* setupToName(channel_setup setup);
     static juce::String describeSetupChannels(channel_setup setup);

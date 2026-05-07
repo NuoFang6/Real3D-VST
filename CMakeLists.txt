@@ -23,8 +23,8 @@ target_sources(Real3D-VST PRIVATE
     Source/PluginEditor.cpp
     Source/dsp/channelmaps.cpp
     Source/dsp/freesurround_decoder.cpp
-    Source/dsp/kiss_fft.cpp
-    Source/dsp/kiss_fftr.cpp
+    kissfft/kiss_fft.c
+    kissfft/kiss_fftr.c
 )
 
 # 链接 JUCE 模块
@@ -35,14 +35,17 @@ target_link_libraries(Real3D-VST PRIVATE
 )
 
 target_include_directories(Real3D-VST PRIVATE
-    JuceLibraryCode
+    kissfft
 )
 
 # 设置 C++ 标准和编码以解决 C4819 警告
 target_compile_features(Real3D-VST PRIVATE cxx_std_17)
-target_compile_options(Real3D-VST PRIVATE /utf-8)
+if(MSVC)
+    target_compile_options(Real3D-VST PUBLIC /utf-8)
+endif()
 
 # 解决 VST3 自动化冲突错误 (通过禁用 VST2 处理逻辑)
-target_compile_definitions(Real3D-VST PRIVATE 
+target_compile_definitions(Real3D-VST PRIVATE
     JUCE_VST3_CAN_REPLACE_VST2=0
+    kiss_fft_scalar=double
 )
