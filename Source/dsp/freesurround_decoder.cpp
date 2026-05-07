@@ -62,11 +62,14 @@ public:
 		set_bass_redirection(false);
 	}
 
-	~decoder_impl() { delete forward; delete inverse; }
+	~decoder_impl() {
+		kiss_fftr_free(forward);
+		kiss_fftr_free(inverse);
+	}
 
 	// decode a stereo chunk, produces a multichannel chunk of the same size (lagged)
 	float *decode(float *input) {
-		// append incoming data to the end of the input buffer 
+		// append incoming data to the end of the input buffer
 		memcpy(&inbuf[N], &input[0], 8*N);
 		// process first and second half, overlapped
 		buffered_decode(&inbuf[0]);
@@ -194,12 +197,12 @@ private:
 
 	// transform amp/phase difference space into x/y soundfield space
 	void transform_decode(double a, double p, double &x, double &y) {
-		x = clamp(1.0047*a + 0.46804*a*p*p*p - 0.2042*a*p*p*p*p + 0.0080586*a*p*p*p*p*p*p*p - 0.0001526*a*p*p*p*p*p*p*p*p*p*p 
-			- 0.073512*a*a*a*p - 0.2499*a*a*a*p*p*p*p + 0.016932*a*a*a*p*p*p*p*p*p*p - 0.00027707*a*a*a*p*p*p*p*p*p*p*p*p*p 
-			+ 0.048105*a*a*a*a*a*p*p*p*p*p*p*p - 0.0065947*a*a*a*a*a*p*p*p*p*p*p*p*p*p*p + 0.0016006*a*a*a*a*a*p*p*p*p*p*p*p*p*p*p*p 
-			- 0.0071132*a*a*a*a*a*a*a*p*p*p*p*p*p*p*p*p + 0.0022336*a*a*a*a*a*a*a*p*p*p*p*p*p*p*p*p*p*p 
+		x = clamp(1.0047*a + 0.46804*a*p*p*p - 0.2042*a*p*p*p*p + 0.0080586*a*p*p*p*p*p*p*p - 0.0001526*a*p*p*p*p*p*p*p*p*p*p
+			- 0.073512*a*a*a*p - 0.2499*a*a*a*p*p*p*p + 0.016932*a*a*a*p*p*p*p*p*p*p - 0.00027707*a*a*a*p*p*p*p*p*p*p*p*p*p
+			+ 0.048105*a*a*a*a*a*p*p*p*p*p*p*p - 0.0065947*a*a*a*a*a*p*p*p*p*p*p*p*p*p*p + 0.0016006*a*a*a*a*a*p*p*p*p*p*p*p*p*p*p*p
+			- 0.0071132*a*a*a*a*a*a*a*p*p*p*p*p*p*p*p*p + 0.0022336*a*a*a*a*a*a*a*p*p*p*p*p*p*p*p*p*p*p
 			- 0.0004804*a*a*a*a*a*a*a*p*p*p*p*p*p*p*p*p*p*p*p);
-		y = clamp(0.98592 - 0.62237*p + 0.077875*p*p - 0.0026929*p*p*p*p*p + 0.4971*a*a*p - 0.00032124*a*a*p*p*p*p*p*p 
+		y = clamp(0.98592 - 0.62237*p + 0.077875*p*p - 0.0026929*p*p*p*p*p + 0.4971*a*a*p - 0.00032124*a*a*p*p*p*p*p*p
 			+ 9.2491e-006*a*a*a*a*p*p*p*p*p*p*p*p*p*p + 0.051549*a*a*a*a*a*a*a*a + 1.0727e-014*a*a*a*a*a*a*a*a*a*a);
 	}
 
@@ -255,7 +258,7 @@ private:
 	bool use_lfe;					// whether to use the LFE channel
 
 	// FFT data structures
-	vector<double> lt,rt,dst;		// left total, right total (source arrays), time-domain destination buffer array
+	vector<kiss_fft_scalar> lt,rt,dst;		// left total, right total (source arrays), time-domain destination buffer array
 	vector<cplx> lf,rf;				// left total / right total in frequency domain
 	kiss_fftr_cfg forward,inverse;	// FFT buffers
 
@@ -286,4 +289,3 @@ void freesurround_decoder::bass_redirection(bool v) { impl->set_bass_redirection
 unsigned freesurround_decoder::buffered() { return impl->buffered(); }
 unsigned freesurround_decoder::num_channels(channel_setup s) { return chn_id[s].size(); }
 channel_id freesurround_decoder::channel_at(channel_setup s, unsigned i) { return i < chn_id[s].size() ? chn_id[s][i] : ci_none; }
-
