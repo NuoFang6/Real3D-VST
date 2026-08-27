@@ -37,8 +37,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout Real3DVSTAudioProcessor::cre
     params.push_back(std::make_unique<juce::AudioParameterFloat>(focusID, "Focus", -1.0f, 1.0f, 0.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(frontSepID, "Front Separation", 0.0f, 2.0f, 1.0f));
     params.push_back(std::make_unique<juce::AudioParameterFloat>(rearSepID, "Rear Separation", 0.0f, 2.0f, 1.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(bassLoID, "Bass Redirect Lo", 0.0f, 150.0f, 80.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>(bassHiID, "Bass Redirect Hi", 0.0f, 150.0f, 111.0f));
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(bassLoID, "Bass Redirect Lo", 0.0f, 150.0f, 80.0f)); // 原来是40
+    params.push_back(std::make_unique<juce::AudioParameterFloat>(bassHiID, "Bass Redirect Hi", 0.0f, 150.0f, 111.0f)); // 原来是90
     params.push_back(std::make_unique<juce::AudioParameterBool>(useLfeID, "Use LFE", true));
 
     juce::StringArray setupNames{"Stereo", "3-Stereo", "4.1 Surround", "5.1 Surround",
