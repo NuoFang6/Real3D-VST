@@ -67,17 +67,17 @@ private:
 
     // 参数 ID 定义
     static inline const juce::ParameterID
-        centerImageID {"center_image", 1},
-        shiftID {"shift", 1},
-        depthID {"depth", 1},
-        circularWrapID {"circular_wrap", 1},
-        focusID {"focus", 1},
-        frontSepID {"front_sep", 1},
-        rearSepID {"rear_sep", 1},
-        bassLoID {"bass_lo", 1},
-        bassHiID {"bass_hi", 1},
-        useLfeID {"use_lfe", 1},
-        channelSetupID {"channel_setup", 1};
+        centerImageID{"center_image", 1},
+        shiftID{"shift", 1},
+        depthID{"depth", 1},
+        circularWrapID{"circular_wrap", 1},
+        focusID{"focus", 1},
+        frontSepID{"front_sep", 1},
+        rearSepID{"rear_sep", 1},
+        bassLoID{"bass_lo", 1},
+        bassHiID{"bass_hi", 1},
+        useLfeID{"use_lfe", 1},
+        channelSetupID{"channel_setup", 1};
 
     // 内部函数用于同步参数到解码器
     void updateParameters();
@@ -105,10 +105,14 @@ private:
     // 临时缓冲区用于交错/反交错
     std::vector<float> processInputBuffer; // 2 * fftSize
     int nonStereoConsecutiveBlocks = 0;
-    static const char* channelIdToName(channel_id id);
-    static const char* setupToName(channel_setup setup);
+    static const char *channelIdToName(channel_id id);
+    static const char *setupToName(channel_setup setup);
     static juce::String describeSetupChannels(channel_setup setup);
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Real3DVSTAudioProcessor)
+
+    bool wasBypassed = false;  // tracks whether the previous block was in bypass mode
+    bool setupChanged = false; // set by updateParameters() when the channel layout is rebuilt
+    void resetFifos();         // re-initialises both FIFOs to their post-prepareToPlay state
 };
